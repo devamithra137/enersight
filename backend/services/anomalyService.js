@@ -80,7 +80,7 @@ async function mergePersistedAlertState(alerts) {
         message: alert.message,
         status: "active",
         timestamp: alert.timestamp,
-        readingId: alert.reading?.id || null,
+        readingId: alert.reading?._id || null,
         category: alert.category || alert.reading?.category || null,
         value: alert.value || alert.reading?.units || null,
         threshold: alert.threshold || null,
@@ -148,6 +148,7 @@ async function detectAnomalies() {
         category: reading.category,
         reading: {
           id: reading._id,
+          _id: reading._id,
           timestamp: reading.timestamp,
           units: reading.units,
           category: reading.category,
