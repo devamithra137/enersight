@@ -10,6 +10,8 @@ const recommendationService = require("../services/recommendationService");
 const { applyOptimizationToUnits } = require("../services/optimizationService");
 const { emitEnergyUpdate } = require("../sockets/socketHandler");
 
+const VALID_CATEGORIES = ["AC", "Lighting", "Appliances", "HVAC", "Computers", "Other"];
+
 // ── POST /api/energy ──────────────────────────────────────────────────────────
 
 /**
@@ -20,19 +22,45 @@ async function ingestEnergy(req, res) {
   try {
     const { timestamp, units, category, deviceId } = req.body;
 
-    // Basic validation
-    if (units === undefined || units === null) {
-      return res.status(400).json({ success: false, error: "units (kWh) is required" });
+    const parsedUnits = typeof units === "number" ? units : Number.NaN;
+    if (!Number.isFinite(parsedUnits) || parsedUnits <= 0) {
+      return res
+        .status(400)
+        .json({ success: false, error: "units must be a finite positive number" });
     }
-    if (!category) {
-      return res.status(400).json({ success: false, error: "category is required" });
+
+    let parsedTimestamp = new Date();
+    if (timestamp !== undefined && timestamp !== null) {
+      parsedTimestamp = new Date(timestamp);
+      if (Number.isNaN(parsedTimestamp.getTime())) {
+        return res.status(400).json({ success: false, error: "timestamp must be a valid date" });
+      }
+    }
+
+    const normalizedCategory = typeof category === "string" ? category.trim() : "";
+    if (!VALID_CATEGORIES.includes(normalizedCategory)) {
+      return res.status(400).json({
+        success: false,
+        error: "category must be one of AC, Lighting, Appliances, HVAC, Computers, Other",
+      });
+    }
+
+    let normalizedDeviceId = null;
+    if (deviceId !== undefined && deviceId !== null) {
+      if (typeof deviceId !== "string" || !deviceId.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: "deviceId must be a non-empty string when provided",
+        });
+      }
+      normalizedDeviceId = deviceId.trim();
     }
 
     const entry = await EnergyData.create({
-      timestamp: timestamp ? new Date(timestamp) : new Date(),
-      units: applyOptimizationToUnits(parseFloat(units)),
-      category,
-      deviceId: deviceId || null,
+      timestamp: parsedTimestamp,
+      units: applyOptimizationToUnits(parsedUnits),
+      category: normalizedCategory,
+      deviceId: normalizedDeviceId,
     });
 
     // Emit the new data point to all connected WebSocket clients
