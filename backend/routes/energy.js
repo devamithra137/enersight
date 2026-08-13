@@ -7,10 +7,14 @@ const router = express.Router();
 const ctrl = require("../controllers/energyController");
 
 // Basic API route
-router.get("/", async (req, res) => {
-  const EnergyData = require("../models/EnergyData");
-  const data = await EnergyData.find().sort({ timestamp: -1 }).limit(50);
-  res.json({ success: true, data });
+router.get("/", async (req, res, next) => {
+  try {
+    const EnergyData = require("../models/EnergyData");
+    const data = await EnergyData.find().sort({ timestamp: -1 }).limit(50);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ── Ingestion ─────────────────────────────────────────────────────────────────
