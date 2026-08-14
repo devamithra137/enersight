@@ -118,10 +118,12 @@ export async function fetchTrends(range: TimeRange): Promise<TrendsResponse> {
 
   const response = await API.get(`/energy/trends?range=${range}`)
   const result = assertSuccess<{
-    range: TimeRange
-    groupedBy: string
-    data: Array<{ period: string; totalUnits: number }>
-  }>(response)
+    data: {
+      range: TimeRange
+      groupedBy: string
+      data: Array<{ period: string; totalUnits: number }>
+    }
+  }>(response).data
 
   const data = result.data.map((item) => ({
     timestamp:

@@ -119,7 +119,7 @@ async function getTrends(req, res) {
         .json({ success: false, error: "range must be daily | weekly | monthly" });
     }
     const data = await aggregationService.getTrends(range);
-    return res.json({ success: true, ...data });
+    return res.json({ success: true, data });
   } catch (err) {
     console.error("[getTrends]", err);
     return res.status(500).json({ success: false, error: "Server error" });
