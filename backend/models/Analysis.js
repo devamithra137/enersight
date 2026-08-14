@@ -71,6 +71,25 @@ const AnalysisSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    assumptions: {
+      rate: {
+        type: Number,
+        required: true,
+      },
+      emissionFactor: {
+        type: Number,
+        required: true,
+      },
+      categorySplit: {
+        type: [
+          {
+            category: String,
+            percentage: Number,
+          },
+        ],
+        required: true,
+      },
+    },
   },
   { timestamps: true }
 );
