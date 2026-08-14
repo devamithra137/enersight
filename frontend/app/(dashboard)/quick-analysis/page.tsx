@@ -329,7 +329,7 @@ export default function QuickAnalysisPage() {
                 <ResultCard
                   title="Estimated Bill"
                   value={`INR ${analysis.estimatedBill.toLocaleString()}`}
-                  detail={`Rate: INR ${analysis.assumptions?.rate || 8}/kWh`}
+                  detail={`Rate: INR ${analysis.assumptions?.rate ?? '--'}/kWh`}
                   icon={IndianRupee}
                   tone={analysis.efficiencyLevel === 'high' ? 'critical' : 'success'}
                 />

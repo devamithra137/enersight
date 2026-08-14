@@ -24,6 +24,7 @@ export interface CategoryUsage {
 export interface EnergyImpact {
   totalConsumption: number
   totalCost: number
+  costRate: number
   carbonFootprint: number
   efficiency: number
   comparedToPrevious: {

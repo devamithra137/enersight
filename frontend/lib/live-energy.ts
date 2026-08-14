@@ -76,11 +76,14 @@ export function mergeEnergyReadings(
   return normalizeEnergyReadings([...(current || []), ...incoming])
 }
 
-export function buildLiveTrendResponse(readings: EnergyReading[]): TrendsResponse {
+export function buildLiveTrendResponse(
+  readings: EnergyReading[],
+  costRate: number
+): TrendsResponse {
   const data = readings.map((reading) => ({
     timestamp: reading.timestamp,
     consumption: reading.units,
-    cost: Number((reading.units * 8).toFixed(2)),
+    cost: Number((reading.units * costRate).toFixed(2)),
     category: reading.category || 'Overall',
   }))
 

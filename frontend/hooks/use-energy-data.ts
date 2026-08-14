@@ -31,6 +31,7 @@ export function useLiveEnergyFeed() {
 
 export function useTrends(range: TimeRange) {
   const liveFeed = useLiveEnergyFeed()
+  const impactQuery = useImpact()
   const historicalQuery = useQuery({
     queryKey: ['trends', range],
     queryFn: () => fetchTrends(range),
@@ -43,7 +44,11 @@ export function useTrends(range: TimeRange) {
 
     return {
       ...liveFeed,
-      data: buildLiveTrendResponse(liveData),
+      data: impactQuery.data
+        ? buildLiveTrendResponse(liveData, impactQuery.data.costRate)
+        : undefined,
+      isLoading: liveFeed.isLoading || impactQuery.isLoading,
+      error: liveFeed.error || impactQuery.error,
     }
   }
 

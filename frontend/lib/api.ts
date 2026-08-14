@@ -61,7 +61,8 @@ export async function fetchLatestAnalysis(): Promise<AnalysisResult | null> {
 
 function buildEstimatedTrendData(
   analysis: AnalysisResult,
-  range: TimeRange
+  range: TimeRange,
+  costRate: number
 ): TrendsResponse {
   const points = range === 'daily' ? 24 : range === 'weekly' ? 7 : 30
   const now = new Date()
@@ -87,7 +88,7 @@ function buildEstimatedTrendData(
     return {
       timestamp: date.toISOString(),
       consumption,
-      cost: Number((consumption * (analysis.assumptions?.rate || 8)).toFixed(2)),
+      cost: Number((consumption * costRate).toFixed(2)),
       category: 'Household estimate',
     }
   })
@@ -113,10 +114,15 @@ export async function fetchEnergyData(): Promise<EnergyReading[]> {
 export async function fetchTrends(range: TimeRange): Promise<TrendsResponse> {
   const latestAnalysis = await fetchLatestAnalysis()
   if (latestAnalysis) {
-    return buildEstimatedTrendData(latestAnalysis, range)
+    const costRate =
+      latestAnalysis.assumptions?.rate ?? (await fetchConfiguredCostRate())
+    return buildEstimatedTrendData(latestAnalysis, range, costRate)
   }
 
-  const response = await API.get(`/energy/trends?range=${range}`)
+  const [response, costRate] = await Promise.all([
+    API.get(`/energy/trends?range=${range}`),
+    fetchConfiguredCostRate(),
+  ])
   const result = assertSuccess<{
     data: {
       range: TimeRange
@@ -131,7 +137,7 @@ export async function fetchTrends(range: TimeRange): Promise<TrendsResponse> {
         ? new Date(`${item.period}T00:00:00`).toISOString()
         : new Date(item.period).toISOString(),
     consumption: item.totalUnits,
-    cost: Number((item.totalUnits * 8).toFixed(2)),
+    cost: Number((item.totalUnits * costRate).toFixed(2)),
     category: 'Overall',
   }))
   const total = data.reduce((sum, item) => sum + item.consumption, 0)
@@ -203,12 +209,30 @@ export async function fetchCategoryUsage(): Promise<CategoryUsage[]> {
   }))
 }
 
+function readCostRate(summary: { costRate?: number } | undefined): number {
+  const costRate = summary?.costRate
+
+  if (typeof costRate !== 'number' || !Number.isFinite(costRate)) {
+    throw new Error('API response did not include a valid cost rate')
+  }
+
+  return costRate
+}
+
+async function fetchConfiguredCostRate(): Promise<number> {
+  const response = await API.get('/energy/impact')
+  const result = assertSuccess<{ data: { summary?: { costRate?: number } } }>(response).data
+  return readCostRate(result.summary)
+}
+
 export async function fetchImpact(): Promise<EnergyImpact> {
   const latestAnalysis = await fetchLatestAnalysis()
   if (latestAnalysis) {
     return {
       totalConsumption: latestAnalysis.currentUnits,
       totalCost: latestAnalysis.estimatedBill,
+      costRate:
+        latestAnalysis.assumptions?.rate ?? (await fetchConfiguredCostRate()),
       carbonFootprint: latestAnalysis.carbonFootprint,
       efficiency: latestAnalysis.efficiencyScore,
       comparedToPrevious: {
@@ -219,12 +243,15 @@ export async function fetchImpact(): Promise<EnergyImpact> {
   }
 
   const response = await API.get('/energy/impact')
-  const result = assertSuccess<{ data: any }>(response).data
+  const result = assertSuccess<{
+    data: { summary?: { costRate?: number } & Record<string, any> }
+  }>(response).data
   const summary = result.summary || {}
 
   return {
     totalConsumption: summary.totalUnits || 0,
     totalCost: summary.totalCost || 0,
+    costRate: readCostRate(summary),
     carbonFootprint: summary.totalCarbonKg || 0,
     efficiency: 78,
     comparedToPrevious: {
