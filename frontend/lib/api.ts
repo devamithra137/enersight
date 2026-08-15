@@ -113,7 +113,7 @@ export async function fetchEnergyData(): Promise<EnergyReading[]> {
 
 export async function fetchTrends(range: TimeRange): Promise<TrendsResponse> {
   const latestAnalysis = await fetchLatestAnalysis()
-  if (latestAnalysis) {
+  if (latestAnalysis && range !== 'daily') {
     const costRate =
       latestAnalysis.assumptions?.rate ?? (await fetchConfiguredCostRate())
     return buildEstimatedTrendData(latestAnalysis, range, costRate)

@@ -1,5 +1,5 @@
 import type { EnergyReading } from './api'
-import type { DashboardSummary, TrendsResponse } from './types'
+import type { DashboardSummary } from './types'
 
 export const LIVE_ENERGY_QUERY_KEY = ['live-energy'] as const
 const LIVE_WINDOW_SIZE = 20
@@ -74,31 +74,6 @@ export function mergeEnergyReadings(
   incoming: EnergyReading[]
 ): EnergyReading[] {
   return normalizeEnergyReadings([...(current || []), ...incoming])
-}
-
-export function buildLiveTrendResponse(
-  readings: EnergyReading[],
-  costRate: number
-): TrendsResponse {
-  const data = readings.map((reading) => ({
-    timestamp: reading.timestamp,
-    consumption: reading.units,
-    cost: Number((reading.units * costRate).toFixed(2)),
-    category: reading.category || 'Overall',
-  }))
-
-  const total = data.reduce((sum, item) => sum + item.consumption, 0)
-  const average = data.length ? total / data.length : 0
-  const peak = data.length ? Math.max(...data.map((item) => item.consumption)) : 0
-
-  return {
-    data,
-    summary: {
-      totalConsumption: Number(total.toFixed(2)),
-      averageConsumption: Number(average.toFixed(2)),
-      peakConsumption: Number(peak.toFixed(2)),
-    },
-  }
 }
 
 export function applyLiveReadingToSummary(

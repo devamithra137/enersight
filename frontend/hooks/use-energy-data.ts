@@ -15,7 +15,6 @@ import {
 import {
   LIVE_ENERGY_QUERY_KEY,
   applyLiveReadingToSummary,
-  buildLiveTrendResponse,
   normalizeEnergyReadings,
 } from '@/lib/live-energy'
 import type { TimeRange } from '@/lib/types'
@@ -30,29 +29,11 @@ export function useLiveEnergyFeed() {
 }
 
 export function useTrends(range: TimeRange) {
-  const liveFeed = useLiveEnergyFeed()
-  const impactQuery = useImpact()
-  const historicalQuery = useQuery({
+  return useQuery({
     queryKey: ['trends', range],
     queryFn: () => fetchTrends(range),
-    enabled: range !== 'daily',
     staleTime: 60 * 1000,
   })
-
-  if (range === 'daily') {
-    const liveData = liveFeed.data || []
-
-    return {
-      ...liveFeed,
-      data: impactQuery.data
-        ? buildLiveTrendResponse(liveData, impactQuery.data.costRate)
-        : undefined,
-      isLoading: liveFeed.isLoading || impactQuery.isLoading,
-      error: liveFeed.error || impactQuery.error,
-    }
-  }
-
-  return historicalQuery
 }
 
 export function usePeakUsage() {
