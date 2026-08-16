@@ -1,7 +1,6 @@
 const EnergyData = require("../models/EnergyData");
 const anomalyService = require("../services/anomalyService");
 const { emitEnergyUpdate, emitEnergyAlert } = require("../sockets/socketHandler");
-const { applyOptimizationToUnits } = require("../services/optimizationService");
 
 const CATEGORIES = ["AC", "Lighting", "Appliances", "HVAC", "Computers", "Other"];
 const DEVICE_IDS = ["dev-001", "dev-002", "dev-003", "dev-004"];
@@ -52,7 +51,7 @@ function generateEnergyReading() {
 
   return {
     timestamp: new Date(),
-    units: applyOptimizationToUnits(generateUnits(category)),
+    units: generateUnits(category),
     category,
     deviceId: randomChoice(DEVICE_IDS),
   };

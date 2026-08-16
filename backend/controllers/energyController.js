@@ -7,7 +7,6 @@ const aggregationService = require("../services/aggregationService");
 const anomalyService = require("../services/anomalyService");
 const insightService = require("../services/insightService");
 const recommendationService = require("../services/recommendationService");
-const { applyOptimizationToUnits } = require("../services/optimizationService");
 const { emitEnergyUpdate } = require("../sockets/socketHandler");
 
 const VALID_CATEGORIES = ["AC", "Lighting", "Appliances", "HVAC", "Computers", "Other"];
@@ -58,7 +57,7 @@ async function ingestEnergy(req, res) {
 
     const entry = await EnergyData.create({
       timestamp: parsedTimestamp,
-      units: applyOptimizationToUnits(parsedUnits),
+      units: parsedUnits,
       category: normalizedCategory,
       deviceId: normalizedDeviceId,
     });
