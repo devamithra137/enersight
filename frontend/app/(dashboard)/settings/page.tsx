@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import {
@@ -47,10 +47,37 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 }
 
+type ApiStatus = 'checking' | 'available' | 'unavailable'
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+const HEALTH_URL = new URL('/health', API_BASE_URL).toString()
+
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const { settings, updateSettings, isConnected } = useEnergyStore()
   const [saved, setSaved] = useState(false)
+  const [apiStatus, setApiStatus] = useState<ApiStatus>('checking')
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function checkApiStatus() {
+      try {
+        const response = await fetch(HEALTH_URL, { signal: controller.signal })
+        const health = await response.json()
+
+        setApiStatus(response.ok && health.status === 'ok' ? 'available' : 'unavailable')
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setApiStatus('unavailable')
+        }
+      }
+    }
+
+    checkApiStatus()
+    return () => controller.abort()
+  }, [])
 
   const handleSave = () => {
     setSaved(true)
@@ -332,13 +359,15 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    Data Encryption
+                    Security Configuration
                   </p>
-                  <p className="text-xs text-muted-foreground">TLS 1.3</p>
+                  <p className="text-xs text-muted-foreground">
+                    Managed by deployment environment
+                  </p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-success/10 text-success">
-                Secure
+              <Badge variant="outline" className="bg-muted text-muted-foreground">
+                Not verified
               </Badge>
             </div>
 
@@ -351,15 +380,28 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    API Endpoint
+                    API Status
                   </p>
                   <p className="text-xs text-muted-foreground font-mono">
-                    api.enersight.io
+                    Backend health check
                   </p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-success/10 text-success">
-                Healthy
+              <Badge
+                variant="outline"
+                className={cn(
+                  apiStatus === 'available'
+                    ? 'bg-success/10 text-success'
+                    : apiStatus === 'unavailable'
+                      ? 'bg-destructive/10 text-destructive'
+                      : 'bg-muted text-muted-foreground'
+                )}
+              >
+                {apiStatus === 'checking'
+                  ? 'Checking'
+                  : apiStatus === 'available'
+                    ? 'Available'
+                    : 'Unavailable'}
               </Badge>
             </div>
           </CardContent>
