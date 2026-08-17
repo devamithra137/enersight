@@ -14,6 +14,7 @@ import {
   Tooltip,
   CartesianGrid,
   Legend,
+  type TooltipProps,
 } from 'recharts'
 import { format } from 'date-fns'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -55,13 +56,13 @@ export function TrendsChart({ range, chartType, showComparison }: TrendsChartPro
     return <Skeleton className="w-full h-full" />
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (!active || !payload?.length) return null
 
     return (
       <div className="bg-card border border-border rounded-lg shadow-lg p-3 space-y-1.5">
         <p className="text-xs font-medium text-foreground">{label}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index) => (
           <div key={index} className="flex items-center gap-2">
             <div
               className="w-2 h-2 rounded-full"

@@ -4,6 +4,7 @@ import { useEffect, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEnergyStore } from '@/lib/store'
 import { socket } from '@/lib/api'
+import type { EnergyReading } from '@/lib/api'
 import {
   type EnergyUpdatePayload,
   LIVE_ENERGY_QUERY_KEY,
@@ -14,6 +15,12 @@ import {
 import { toast } from 'sonner'
 import type { Alert } from '@/lib/types'
 import type { DashboardSummary } from '@/lib/types'
+
+type LiveAlertPayload = {
+  message?: string
+  severity?: string
+  reading?: Partial<Pick<EnergyReading, '_id' | 'timestamp' | 'category' | 'units'>>
+}
 
 export function useSocket() {
   const queryClient = useQueryClient()
@@ -47,7 +54,7 @@ export function useSocket() {
   }, [queryClient, setLastSynced])
 
   const handleAlert = useCallback(
-    (payload: Alert | { message?: string; severity?: string; reading?: any }) => {
+    (payload: Alert | LiveAlertPayload) => {
       const alert: Alert =
         'id' in payload
           ? payload

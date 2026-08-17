@@ -37,6 +37,82 @@ interface EnergyResponse {
   data: EnergyReading[]
 }
 
+interface PeakUsageResponseData {
+  peakHour?: { start?: string }
+  peakUnits?: number
+  percentageOfTotal?: number
+}
+
+interface CategoryUsageResponseData {
+  categories?: Array<{
+    category: string
+    totalUnits: number
+    percentageShare: number
+  }>
+}
+
+interface ImpactSummary {
+  costRate?: number
+  totalUnits?: number
+  totalCost?: number
+  totalCarbonKg?: number
+}
+
+type AlertResponseItem = {
+    type?: string
+    title?: string
+    message: string
+    timestamp?: string
+    reading?: Partial<Pick<EnergyReading, 'timestamp' | 'category' | 'units'>>
+    resolved?: boolean
+    resolvedAt?: string | null
+    status?: 'active' | 'resolved'
+    category?: string
+    value?: number
+    threshold?: number
+  } &
+  (
+    | { id: string; alertId?: string }
+    | { id?: string; alertId: string }
+  )
+
+interface AlertResponseData {
+  alerts?: AlertResponseItem[]
+}
+
+interface InsightsResponseData {
+  insights?: Array<{
+    type: string
+    message: string
+    value: number
+    unit: string
+    metadata?: { category?: string }
+  }>
+}
+
+type RecommendationResponseItem = {
+    id: string
+    title: string
+    priority: 'high' | 'medium' | 'low'
+    estimatedMonthlySavings?: { cost?: number }
+    estimatedSavings?: number
+    dataContext?: {
+      topCategoryDuringPeak?: string
+      peakHour?: string
+    }
+    status?: 'pending' | 'applied'
+    appliedAt?: string | null
+    impactReductionPercent?: number
+  } &
+  (
+    | { recommendation: string; description?: string }
+    | { recommendation?: string; description: string }
+  )
+
+interface RecommendationsResponseData {
+  recommendations?: RecommendationResponseItem[]
+}
+
 export const socket = io(SOCKET_URL, {
   transports: ['websocket', 'polling'],
   reconnection: true,
@@ -156,7 +232,7 @@ export async function fetchTrends(range: TimeRange): Promise<TrendsResponse> {
 
 export async function fetchPeakUsage(): Promise<PeakUsage> {
   const response = await API.get('/energy/peak')
-  const result = assertSuccess<{ data: any }>(response).data
+  const result = assertSuccess<{ data: PeakUsageResponseData }>(response).data
 
   return {
     time: result.peakHour?.start || '--:--',
@@ -191,7 +267,7 @@ export async function fetchCategoryUsage(): Promise<CategoryUsage[]> {
   }
 
   const response = await API.get('/energy/category')
-  const result = assertSuccess<{ data: any }>(response).data
+  const result = assertSuccess<{ data: CategoryUsageResponseData }>(response).data
   const colors = [
     'var(--chart-1)',
     'var(--chart-2)',
@@ -200,7 +276,7 @@ export async function fetchCategoryUsage(): Promise<CategoryUsage[]> {
     'var(--chart-5)',
   ]
 
-  return (result.categories || []).map((item: any, index: number) => ({
+  return (result.categories || []).map((item, index) => ({
     category: item.category,
     consumption: item.totalUnits,
     percentage: item.percentageShare,
@@ -244,7 +320,7 @@ export async function fetchImpact(): Promise<EnergyImpact> {
 
   const response = await API.get('/energy/impact')
   const result = assertSuccess<{
-    data: { summary?: { costRate?: number } & Record<string, any> }
+    data: { summary?: ImpactSummary }
   }>(response).data
   const summary = result.summary || {}
 
@@ -263,11 +339,11 @@ export async function fetchImpact(): Promise<EnergyImpact> {
 
 export async function fetchAlerts(): Promise<Alert[]> {
   const response = await API.get('/alerts')
-  const result = assertSuccess<{ data: any }>(response).data
+  const result = assertSuccess<{ data: AlertResponseData }>(response).data
 
   return (result.alerts || [])
-    .map((alert: any): Alert => ({
-      id: alert.id || alert.alertId,
+    .map((alert): Alert => ({
+      id: alert.id || alert.alertId!,
       type: alert.type === 'critical' ? 'critical' : alert.type === 'info' ? 'info' : 'warning',
       title: alert.title || (alert.type === 'critical' ? 'Critical anomaly' : 'Usage anomaly'),
       message: alert.message,
@@ -287,9 +363,9 @@ export async function fetchAlerts(): Promise<Alert[]> {
 
 export async function fetchInsights(): Promise<Insight[]> {
   const response = await API.get('/energy/insights')
-  const result = assertSuccess<{ data: any }>(response).data
+  const result = assertSuccess<{ data: InsightsResponseData }>(response).data
 
-  return (result.insights || []).map((insight: any, index: number) => ({
+  return (result.insights || []).map((insight, index) => ({
     id: `${insight.type}-${index}`,
     title: insight.message.split(':')[0] || 'Energy insight',
     description: insight.message,
@@ -311,12 +387,12 @@ export async function fetchInsights(): Promise<Insight[]> {
 
 export async function fetchRecommendations(): Promise<Recommendation[]> {
   const response = await API.get('/recommendations')
-  const result = assertSuccess<{ data: any }>(response).data
+  const result = assertSuccess<{ data: RecommendationsResponseData }>(response).data
 
-  return (result.recommendations || []).map((rec: any) => ({
+  return (result.recommendations || []).map((rec) => ({
     id: rec.id,
     title: rec.title,
-    description: rec.recommendation || rec.description,
+    description: rec.recommendation || rec.description!,
     priority: rec.priority,
     estimatedSavings:
       rec.estimatedMonthlySavings?.cost ||
@@ -396,5 +472,5 @@ export async function applyRecommendation(recommendationId: string) {
 
 export async function resolveAlert(id: string) {
   const response = await API.patch(`/alerts/${encodeURIComponent(id)}/resolve`)
-  return assertSuccess<{ data: any }>(response)
+  return assertSuccess<{ data: unknown }>(response)
 }
