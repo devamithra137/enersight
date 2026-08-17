@@ -343,13 +343,11 @@ Install dependencies:
 npm install
 ```
 
-Create your environment configuration if required:
+Create `backend/.env`:
 
-```text
-.env
+```env
+MONGODB_URI=<your_mongodb_connection_string>
 ```
-
-Add the required environment variables according to the backend configuration.
 
 Start the backend:
 
@@ -373,6 +371,13 @@ Install dependencies:
 npm install
 ```
 
+Create `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+```
+
 Start the development server:
 
 ```bash
@@ -387,16 +392,20 @@ The frontend can then be accessed through the local development URL displayed by
 
 Environment variables should **never be committed to GitHub**.
 
-Store sensitive configuration in `.env` files.
-
-Typical configuration may include:
+Store backend configuration in `backend/.env`:
 
 ```env
-API_URL=your_api_url
-DATABASE_URL=your_database_url
+MONGODB_URI=<your_mongodb_connection_string>
 ```
 
-> The exact environment variables depend on the current backend configuration.
+Store frontend configuration in `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+```
+
+> Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser. Do not put secrets in them.
 
 ---
 
