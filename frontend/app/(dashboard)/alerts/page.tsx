@@ -14,7 +14,6 @@ import {
   Activity,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
@@ -315,7 +314,7 @@ export default function AlertsPage() {
                     </div>
                   ))
                 ) : (
-                  data?.slice(0, 5).map((alert, index) => (
+                  data?.slice(0, 5).map((alert) => (
                     <div key={alert.id} className="relative flex gap-4">
                       {/* Timeline dot */}
                       <div

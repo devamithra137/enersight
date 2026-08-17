@@ -10,7 +10,6 @@ import {
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCategoryUsage } from '@/hooks/use-energy-data'
-import { cn } from '@/lib/utils'
 
 const COLORS = [
   'var(--chart-1)',
@@ -82,7 +81,7 @@ export function CategoryBreakdownChart() {
           </ResponsiveContainer>
         </div>
         <div className="flex-1 space-y-3">
-          {chartData?.map((cat, index) => (
+          {chartData?.map((cat) => (
             <div key={cat.name} className="flex items-center gap-3">
               <div
                 className="w-3 h-3 rounded-sm shrink-0"

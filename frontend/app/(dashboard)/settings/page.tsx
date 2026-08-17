@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import {
-  Settings as SettingsIcon,
   Moon,
   Sun,
   Monitor,
@@ -68,7 +67,7 @@ export default function SettingsPage() {
         const health = await response.json()
 
         setApiStatus(response.ok && health.status === 'ok' ? 'available' : 'unavailable')
-      } catch (error) {
+      } catch {
         if (!controller.signal.aborted) {
           setApiStatus('unavailable')
         }
