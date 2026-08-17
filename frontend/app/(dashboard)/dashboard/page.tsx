@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Zap, TrendingDown, Gauge, Bell, IndianRupee } from 'lucide-react'
+import { Zap, TrendingDown, Gauge, IndianRupee } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { KpiCard } from '@/components/dashboard/kpi-card'
@@ -10,7 +10,6 @@ import { PeakUsageSummary } from '@/components/dashboard/peak-usage-summary'
 import { AlertsPreview } from '@/components/dashboard/alerts-preview'
 import { RecommendationsPreview } from '@/components/dashboard/recommendations-preview'
 import { useDashboardSummary, useImpact } from '@/hooks/use-energy-data'
-import { EnergyReadings } from '@/components/dashboard/energy-readings'
 
 const containerVariants = {
   hidden: { opacity: 0 },
